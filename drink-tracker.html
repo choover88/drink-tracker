@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Drink Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    :root {
+      --c-muted: #827797;
+      --c-blush: #e0bad0;
+      --c-lilac: #b992b1;
+      --c-berry: #a83086;
+      --c-teal: #085164;
+      --c-charcoal: #2e2e2e;
+      --c-white: #ffffff;
+      --c-text: #1a1a2e;
+      --c-text-muted: #6b6b80;
+      --c-border: #e8e4ee;
+      --c-cal-border: #c8c4d0;
+    }
+    html, body {
+      background: #fff;
+      min-height: 100vh;
+      width: 100%;
+    }
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 14px 80px;
+      background: #fff;
+    }
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--c-text);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .page-title span { font-size: 22px; }
+
+    /* Entry section */
+    .entry-section {
+      background: #f9f5fb;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
+      border: 1px solid var(--c-border);
+    }
+    .entry-label-top {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--c-muted);
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .entry-date-label { font-size: 10px; color: var(--c-text-muted); margin-bottom: 3px; }
+    input[type=date] {
+      border: 1px solid var(--c-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+      background: var(--c-white);
+      color: var(--c-text);
+      outline: none;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    input[type=date]:focus { border-color: var(--c-lilac); }
+    .count-label { font-size: 10px; color: var(--c-text-muted); margin-bottom: 6px; }
+    .drink-picker {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .drink-chip {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 2px solid var(--c-border);
+      background: var(--c-white);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--c-text-muted);
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      width: 100%;
+    }
+    .drink-chip.chip-zero { font-size: 16px; }
+    .drink-chip.sel-zero  { background: var(--c-teal);     border-color: var(--c-teal);     color: white; }
+    .drink-chip.sel-light { background: var(--c-blush);    border-color: var(--c-blush);    color: var(--c-berry); }
+    .drink-chip.sel-mid   { background: var(--c-lilac);    border-color: var(--c-lilac);    color: white; }
+    .drink-chip.sel-berry { background: var(--c-berry);    border-color: var(--c-berry);    color: white; }
+    .drink-chip.sel-dark  { background: var(--c-charcoal); border-color: var(--c-charcoal); color: white; }
+
+    .log-btn {
+      width: 100%;
+      border-radius: 20px;
+      border: none;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .log-btn-default { background: var(--c-border); color: var(--c-text-muted); cursor: not-allowed; }
+    .log-btn-dry     { background: var(--c-teal);     color: white; }
+    .log-btn-light   { background: var(--c-blush);    color: var(--c-berry); }
+    .log-btn-mid     { background: var(--c-lilac);    color: white; }
+    .log-btn-berry   { background: var(--c-berry);    color: white; }
+    .log-btn-dark    { background: var(--c-charcoal); color: white; }
+
+    /* Metrics */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .metric-card {
+      background: var(--c-white);
+      border: 1px solid var(--c-border);
+      border-radius: 14px;
+      padding: 11px 13px;
+    }
+    .metric-label {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--c-muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .metric-value { font-size: 26px; font-weight: 600; color: var(--c-text); line-height: 1; }
+    .metric-value.streak { color: var(--c-teal); }
+    .metric-sub { font-size: 10px; color: var(--c-text-muted); margin-top: 2px; }
+
+    /* Month nav */
+    .month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .month-nav button {
+      background: none;
+      border: 1px solid var(--c-border);
+      border-radius: 10px;
+      padding: 5px 16px;
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--c-muted);
+      font-family: 'Poppins', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .month-title { font-size: 15px; font-weight: 600; color: var(--c-text); }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 500; color: var(--c-text-muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Calendar */
+    .cal-wrapper {
+      border: 1.5px solid var(--c-cal-border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+    .day-header {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--c-muted);
+      text-align: center;
+      padding: 7px 0;
+      letter-spacing: 0.03em;
+      background: #f4f1f7;
+      border-bottom: 1.5px solid var(--c-cal-border);
+      border-right: 1px solid var(--c-cal-border);
+    }
+    .day-header:last-child { border-right: none; }
+    .day-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: var(--c-white);
+      border-right: 1px solid var(--c-cal-border);
+      border-bottom: 1px solid var(--c-cal-border);
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      transition: filter 0.1s;
+    }
+    .day-cell:nth-child(7n) { border-right: none; }
+    .day-cell.empty { cursor: default; background: #faf9fb; }
+    .day-cell.future { opacity: 0.3; cursor: default; pointer-events: none; }
+    .day-cell.today::after {
+      content: '';
+      position: absolute;
+      top: 2px; right: 3px;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--c-lilac);
+    }
+    .day-cell:not(.empty):not(.future):active { filter: brightness(0.93); }
+    .day-num  { font-size: 11px; font-weight: 500; color: var(--c-text-muted); }
+    .drink-lbl { font-size: 8px; font-weight: 600; margin-top: 1px; }
+
+    .day-cell.t-dry   { background: #ddf0f2; }
+    .day-cell.t-dry   .day-num, .day-cell.t-dry   .drink-lbl { color: var(--c-teal); }
+    .day-cell.t-light { background: #fae8f4; }
+    .day-cell.t-light .day-num, .day-cell.t-light .drink-lbl { color: var(--c-berry); }
+    .day-cell.t-mid   { background: #ecdaec; }
+    .day-cell.t-mid   .day-num, .day-cell.t-mid   .drink-lbl { color: #7a3080; }
+    .day-cell.t-berry { background: #f0c8e8; }
+    .day-cell.t-berry .day-num, .day-cell.t-berry .drink-lbl { color: var(--c-berry); }
+    .day-cell.t-dark  { background: #d0cece; }
+    .day-cell.t-dark  .day-num, .day-cell.t-dark  .drink-lbl { color: var(--c-charcoal); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 20px;
+      padding: 10px 24px;
+      font-size: 13px;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 99;
+      white-space: nowrap;
+      color: white;
+    }
+    .toast.t-dry   { background: var(--c-teal); }
+    .toast.t-drink { background: var(--c-berry); }
+    .toast.t-dark  { background: var(--c-charcoal); }
+    .toast.show    { opacity: 1; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="page-title"><span>🌿</span> Drink Tracker</div>
+
+  <div class="entry-section">
+    <div class="entry-label-top">Log a day</div>
+    <div class="entry-date-label">Date</div>
+    <input type="date" id="entry-date" />
+    <div class="count-label">How many drinks?</div>
+    <div class="drink-picker" id="drink-picker">
+      <button class="drink-chip chip-zero" data-val="0">🌿</button>
+      <button class="drink-chip" data-val="1">1</button>
+      <button class="drink-chip" data-val="2">2</button>
+      <button class="drink-chip" data-val="3">3</button>
+      <button class="drink-chip" data-val="4">4</button>
+      <button class="drink-chip" data-val="5">5</button>
+      <button class="drink-chip" data-val="6">6</button>
+      <button class="drink-chip" data-val="7" style="font-size:10px;">7+</button>
+    </div>
+    <button class="log-btn log-btn-default" id="log-btn" disabled>Log day</button>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="month-nav">
+    <button id="prev-month">←</button>
+    <span class="month-title" id="month-title"></span>
+    <button id="next-month">→</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#ddf0f2;border:1px solid #a8d8dc;"></div>Dry</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fae8f4;border:1px solid #e0bad0;"></div>1–2</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ecdaec;border:1px solid #b992b1;"></div>3–4</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f0c8e8;border:1px solid #a83086;"></div>5–6</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#d0cece;border:1px solid #827797;"></div>7+</div>
+  </div>
+
+  <div class="cal-wrapper">
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'drink-tracker-v4';
+  let data = {};
+  let viewYear, viewMonth;
+  let selectedVal = null;
+
+  function loadData() {
+    try { const r = localStorage.getItem(STORAGE_KEY); if (r) data = JSON.parse(r); } catch(e) {}
+  }
+  function saveData() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+  }
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function tierClass(v) {
+    if (v === undefined) return '';
+    if (v === 0) return 't-dry';
+    if (v <= 2) return 't-light';
+    if (v <= 4) return 't-mid';
+    if (v <= 6) return 't-berry';
+    return 't-dark';
+  }
+  function chipTier(v) {
+    if (v === 0) return 'sel-zero';
+    if (v <= 2) return 'sel-light';
+    if (v <= 4) return 'sel-mid';
+    if (v <= 6) return 'sel-berry';
+    return 'sel-dark';
+  }
+  function btnClass(v) {
+    if (v === 0) return 'log-btn-dry';
+    if (v <= 2) return 'log-btn-light';
+    if (v <= 4) return 'log-btn-mid';
+    if (v <= 6) return 'log-btn-berry';
+    return 'log-btn-dark';
+  }
+  function btnLabel(v) {
+    if (v === 0) return '🌿 Log dry day!';
+    if (v === 7) return 'Log 7+ drinks';
+    return `Log ${v} drink${v > 1 ? 's' : ''}`;
+  }
+
+  function renderCalendar() {
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+    ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => {
+      const h = document.createElement('div'); h.className = 'day-header'; h.textContent = d; grid.appendChild(h);
+    });
+    const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+    const today = todayStr();
+    for (let i = 0; i < firstDay; i++) {
+      const e = document.createElement('div'); e.className = 'day-cell empty'; grid.appendChild(e);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const cell = document.createElement('div');
+      const isToday = key === today;
+      const isFuture = key > today;
+      const logged = data[key];
+      const tc = tierClass(logged);
+      cell.className = `day-cell ${tc} ${isToday?'today':''} ${isFuture?'future':''}`.trim();
+      const numEl = document.createElement('div'); numEl.className = 'day-num'; numEl.textContent = d;
+      cell.appendChild(numEl);
+      if (logged !== undefined) {
+        const lbl = document.createElement('div'); lbl.className = 'drink-lbl';
+        lbl.textContent = logged === 0 ? '✓' : logged === 7 ? '7+' : String(logged);
+        cell.appendChild(lbl);
+      }
+      if (!isFuture) {
+        cell.addEventListener('click', () => {
+          document.getElementById('entry-date').value = key;
+          if (logged !== undefined) selectChip(logged);
+        });
+      }
+      grid.appendChild(cell);
+    }
+    const mn = new Date(viewYear, viewMonth, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+    document.getElementById('month-title').textContent = mn;
+  }
+
+  function thisWeekDrinks() {
+    const today = new Date();
+    const dow = today.getDay();
+    let total = 0;
+    for (let i = 0; i <= dow; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - (dow - i));
+      const key = d.toISOString().slice(0,10);
+      const v = data[key];
+      if (v !== undefined) total += (v === 7 ? 7 : v);
+    }
+    return total;
+  }
+
+  function calcMetrics() {
+    const allKeys = Object.keys(data).sort();
+    if (!allKeys.length) return { streak:0, avgWeek:0, avgMonth:0, thisWeek:0 };
+    const today = todayStr();
+    let streak = 0, cur = new Date(today);
+    while (true) {
+      const k = cur.toISOString().slice(0,10);
+      if (data[k] === 0) { streak++; cur.setDate(cur.getDate()-1); } else break;
+    }
+    const drinkVal = v => v === undefined ? 0 : v === 7 ? 7 : v;
+    const totalDrinks = allKeys.reduce((s,k) => s + drinkVal(data[k]), 0);
+    const weeks = Math.max(1, Math.ceil(allKeys.length / 7));
+    const months = Math.max(1, Math.ceil(allKeys.length / 30));
+    return { streak, avgWeek: totalDrinks/weeks, avgMonth: totalDrinks/months, thisWeek: thisWeekDrinks() };
+  }
+
+  function renderMetrics() {
+    const m = calcMetrics();
+    document.getElementById('metrics').innerHTML = `
+      <div class="metric-card"><div class="metric-label">Dry streak</div><div class="metric-value streak">${m.streak}</div><div class="metric-sub">days in a row</div></div>
+      <div class="metric-card"><div class="metric-label">This week</div><div class="metric-value">${m.thisWeek}</div><div class="metric-sub">Sun – today</div></div>
+      <div class="metric-card"><div class="metric-label">Avg / week</div><div class="metric-value">${m.avgWeek.toFixed(1)}</div><div class="metric-sub">all time</div></div>
+      <div class="metric-card"><div class="metric-label">Avg / month</div><div class="metric-value">${Math.round(m.avgMonth)}</div><div class="metric-sub">all time</div></div>
+    `;
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => { t.className = t.className.replace(' show',''); }, 2200);
+  }
+
+  function selectChip(val) {
+    selectedVal = val;
+    document.querySelectorAll('.drink-chip').forEach(c => {
+      const v = parseInt(c.dataset.val);
+      c.className = 'drink-chip' + (v===0?' chip-zero':'');
+      if (v === val) c.classList.add(chipTier(val));
+    });
+    const btn = document.getElementById('log-btn');
+    btn.disabled = false;
+    btn.className = `log-btn ${btnClass(val)}`;
+    btn.textContent = btnLabel(val);
+  }
+
+  function render() { renderCalendar(); renderMetrics(); }
+
+  loadData();
+  const now = new Date();
+  viewYear = now.getFullYear(); viewMonth = now.getMonth();
+  document.getElementById('entry-date').value = todayStr();
+  document.getElementById('entry-date').max = todayStr();
+
+  document.getElementById('drink-picker').addEventListener('click', e => {
+    const chip = e.target.closest('.drink-chip');
+    if (!chip) return;
+    selectChip(parseInt(chip.dataset.val));
+  });
+
+  document.getElementById('log-btn').addEventListener('click', () => {
+    if (selectedVal === null) return;
+    const d = document.getElementById('entry-date').value;
+    if (!d) { showToast('Pick a date first', 't-drink'); return; }
+    data[d] = selectedVal;
+    saveData();
+    let msg, type;
+    if (selectedVal === 0) { msg = '🌿 Dry day — amazing work!'; type = 't-dry'; }
+    else if (selectedVal === 7) { msg = 'Logged 7+ drinks'; type = 't-dark'; }
+    else { msg = `Logged ${selectedVal} drink${selectedVal>1?'s':''}`; type = 't-drink'; }
+    showToast(msg, type);
+    selectedVal = null;
+    document.querySelectorAll('.drink-chip').forEach(c => { c.className = 'drink-chip'+(parseInt(c.dataset.val)===0?' chip-zero':''); });
+    const btn = document.getElementById('log-btn');
+    btn.disabled = true; btn.className = 'log-btn log-btn-default'; btn.textContent = 'Log day';
+    render();
+  });
+
+  document.getElementById('prev-month').addEventListener('click', () => { viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} render(); });
+  document.getElementById('next-month').addEventListener('click', () => { viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} render(); });
+
+  render();
+</script>
+</body>
+</html>
